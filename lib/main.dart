@@ -1,6 +1,7 @@
+import 'package:adventures_app/providers/adventures_provider.dart';
 import 'package:flutter/material.dart';
 import 'screens/screens.dart';
-
+import 'package:provider/provider.dart';
 
 void main() => runApp(const MyApp());
 
@@ -9,13 +10,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      initialRoute: 'home',
-      routes: {
-        'home':(_) => const HomeScreen(),
-        'details':(_) => const DetailsScreen() 
-      },
+    return ChangeNotifierProvider(
+      create: (_) => AdventuresProvider(),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        initialRoute: 'home',
+        routes: {
+          'home': (_) => const HomeScreen(),
+          'details': (_) => const DetailsScreen()
+        },
+      ),
     );
   }
 }

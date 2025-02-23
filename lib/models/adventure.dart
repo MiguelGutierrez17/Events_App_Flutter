@@ -5,29 +5,37 @@ Adventure adventureFromMap(String str) => Adventure.fromMap(json.decode(str));
 String adventureToMap(Adventure data) => json.encode(data.toMap());
 
 class Adventure {
+  int? id;
   String title;
-  DateTime date;
+  String date;
   String place;
   String? img;
+  bool? add;
 
   Adventure({
+    this.id,
     required this.title,
     required this.date,
     required this.place,
     this.img,
+    this.add,
   });
 
   factory Adventure.fromMap(Map<String, dynamic> json) => Adventure(
+        id: json["id"],
         title: json["title"],
-        date: DateTime.parse(json["date"]),
+        date: (json["date"]),
         place: json["place"],
         img: json["img"],
+        // add: json["add"],
       );
 
   Map<String, dynamic> toMap() => {
+        "id": id,
         "title": title,
-        "date": "${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}",
+        "date": date,
         "place": place,
         "img": img,
+        // "add": add,
       };
 }

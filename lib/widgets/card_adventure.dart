@@ -1,18 +1,25 @@
 import 'package:adventures_app/models/adventure.dart';
+import 'package:adventures_app/providers/adventures_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+// import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class AdventureCard extends StatelessWidget {
-  final bool isAdd;
   final Adventure adventure;
 
-  const AdventureCard(
-      {super.key, required this.adventure, required this.isAdd});
+  const AdventureCard({super.key, required this.adventure});
 
   @override
   Widget build(BuildContext context) {
-    if (!isAdd) {
-      return Container(
+    final adventuresProvider = Provider.of<AdventuresProvider>(context);
+    return GestureDetector(
+      // onTap: () =>
+      //     Navigator.pushNamed(context, 'details', arguments: adventure),
+      onTap: () => {
+        adventuresProvider.currentAdventure = adventure,
+        Navigator.pushNamed(context, 'details')
+      },
+      child: Container(
         height: 180,
         decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
         clipBehavior: Clip.hardEdge,
@@ -44,8 +51,9 @@ class AdventureCard extends StatelessWidget {
               Positioned(
                 bottom: 30,
                 right: 10,
-                child: Text(
-                    DateFormat('dd/MM/yyyy HH:mm').format(adventure.date),
+                // child: Text(
+                //     DateFormat('dd/MM/yyyy HH:mm').format(adventure.date).toString(),
+                child: Text(adventure.date,
                     style: const TextStyle(color: Colors.white, fontSize: 15)),
               ),
               Positioned(
@@ -57,18 +65,7 @@ class AdventureCard extends StatelessWidget {
             ],
           ),
         ),
-      );
-    } else {
-      return Container(
-        alignment: Alignment.bottomRight,
-        child: Column(
-          children: [
-            Text(adventure.title),
-            Text(DateFormat('dd/MM/yyyy').format(adventure.date)),
-            Text(adventure.place),
-          ],
-        ),
-      );
-    }
+      ),
+    );
   }
 }
