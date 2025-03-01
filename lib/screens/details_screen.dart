@@ -23,11 +23,11 @@ class DetailsScreen extends StatelessWidget {
                   GestureDetector(
                     onTap: () => Navigator.pushNamed(context, 'home'),
                     child: const SizedBox(
-                      height: 40,
-                      width: 40,
+                      height: 30,
+                      width: 30,
                       child: Icon(
                         Icons.arrow_back_rounded,
-                        size: 40,
+                        size: 30,
                         color: Colors.grey,
                       ),
                     ),
@@ -35,10 +35,10 @@ class DetailsScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 10),
-              currentAdventure.add == true 
-              ? const AdventureCardAdd()
-              : HeaderImage(adventure: currentAdventure),
-              const SizedBox(height: 10),
+              currentAdventure.add == true
+                  ? const AdventureCardAdd()
+                  : HeaderImage(adventure: currentAdventure),
+              const SizedBox(height: 20),
               const MyForm(),
             ],
           ),
@@ -60,52 +60,94 @@ class _MyFormState extends State<MyForm> {
   @override
   Widget build(BuildContext context) {
     final adventuresProvider = Provider.of<AdventuresProvider>(context);
-    final adding =
-        adventuresProvider.currentAdventure.add == true ? true : false;
+    final adding = adventuresProvider.currentAdventure.add ?? false;
     return Form(
       key: _adventureKey,
       child: Column(
         children: [
+          CustomField(
+              fieldLabel: 'Title',
+              hintLabel: 'Type your event title',
+              initialValue:
+                  adding ? '' : adventuresProvider.currentAdventure.title,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Title field is missing';
+                }
+                return null;
+              }),
+          const SizedBox(height: 10),
+          CustomField(
+              fieldLabel: 'Place',
+              hintLabel: 'Select a date',
+              initialValue:
+                  adding ? '' : adventuresProvider.currentAdventure.date,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Date field is missing';
+                }
+                return null;
+              }),
+          const SizedBox(height: 10),
+          CustomField(
+              fieldLabel: 'Place',
+              hintLabel: 'Type place of adventure',
+              initialValue:
+                  adding ? '' : adventuresProvider.currentAdventure.place,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Place field is missing';
+                }
+                return null;
+              }),
+          const SizedBox(height: 10),
+        ],
+      ),
+    );
+  }
+}
+
+class CustomField extends StatelessWidget {
+  final String fieldLabel;
+  final String hintLabel;
+  final String? initialValue;
+  final String? Function(String?)? validator;
+
+  const CustomField(
+      {super.key,
+      required this.fieldLabel,
+      required this.hintLabel,
+      this.initialValue,
+      this.validator});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(fieldLabel),
+          const SizedBox(height: 5),
           TextFormField(
-                        decoration: const InputDecoration(
-              labelText: 'Title'
-            ),
-            initialValue:
-                adding ? '' : adventuresProvider.currentAdventure.title,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Title field is missing';
-              }
-              return null;
-            },
-          ),
-          TextFormField(
-            decoration: const InputDecoration(
-              labelText: 'Date'
-            ),
-            initialValue:
-                adding ? '' : adventuresProvider.currentAdventure.date,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Date field is missing';
-              }
-              return null;
-            },
-          ),
-          TextFormField(
-                        decoration: const InputDecoration(
-              labelText: 'Place'
-            ),
-            initialValue:
-                adding ? '' : adventuresProvider.currentAdventure.place,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Place field is missing';
-              }
-              return null;
-            },
+            initialValue: initialValue,
+            decoration: _FieldStyle.newStyle(placeholderText: hintLabel),
+            validator: validator,
           )
         ],
+      ),
+    );
+  }
+}
+
+class _FieldStyle {
+  static InputDecoration newStyle({
+    String placeholderText = "",
+  }) {
+    return InputDecoration(
+      hintText: placeholderText,
+      floatingLabelBehavior: FloatingLabelBehavior.never,
+      border: const OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(10)),
       ),
     );
   }

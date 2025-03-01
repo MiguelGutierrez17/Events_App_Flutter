@@ -15,9 +15,9 @@ class AdventureCard extends StatelessWidget {
     return GestureDetector(
       // onTap: () =>
       //     Navigator.pushNamed(context, 'details', arguments: adventure),
-      onTap: () => {
-        adventuresProvider.currentAdventure = adventure,
-        Navigator.pushNamed(context, 'details')
+      onTap: () {
+        adventuresProvider.currentAdventure = adventure;
+        Navigator.pushNamed(context, 'details');
       },
       child: Container(
         height: 180,
