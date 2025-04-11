@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:adventures_app/models/adventure.dart';
 import 'package:adventures_app/providers/adventures_provider.dart';
 import 'package:flutter/material.dart';
@@ -12,12 +14,15 @@ class AdventureCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final adventuresProvider = Provider.of<AdventuresProvider>(context);
+    String? currentRoute = ModalRoute.of(context)?.settings.name;
     return GestureDetector(
-      // onTap: () =>
-      //     Navigator.pushNamed(context, 'details', arguments: adventure),
       onTap: () {
-        adventuresProvider.currentAdventure = adventure;
-        Navigator.pushNamed(context, 'details');
+        if (currentRoute == 'home') {
+          adventuresProvider.currentAdventure = adventure;
+          Navigator.pushNamed(context, 'details');
+        } else {
+          print('image edit');
+        }
       },
       child: Container(
         height: 180,
@@ -28,9 +33,13 @@ class AdventureCard extends StatelessWidget {
           child: Stack(
             children: [
               Positioned.fill(
-                  child: adventure.img != null
-                      ? Image.network(adventure.img!, fit: BoxFit.cover)
-                      : Image.network('', fit: BoxFit.cover)),
+                child: Hero(
+                    tag: adventure.id.toString(),
+                    child: adventure.img != null
+                        // ? Image.network(adventure.img!, fit: BoxFit.cover)
+                        ? Image.memory(base64Decode(adventure.img!), fit: BoxFit.cover)
+                        : Image.asset('assets/empty-state.jpg')),
+              ),
               Positioned.fill(
                   child: Container(
                 decoration: BoxDecoration(
@@ -60,6 +69,12 @@ class AdventureCard extends StatelessWidget {
                   bottom: 10,
                   right: 10,
                   child: Text(adventure.place,
+                      style:
+                          const TextStyle(color: Colors.white, fontSize: 15))),
+              Positioned(
+                  top: 10,
+                  left: 10,
+                  child: Text(adventure.id.toString(),
                       style:
                           const TextStyle(color: Colors.white, fontSize: 15))),
             ],

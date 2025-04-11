@@ -3,20 +3,45 @@ import 'package:adventures_app/providers/db_provider.dart';
 import 'package:flutter/material.dart';
 
 class AdventuresProvider extends ChangeNotifier {
+  //Esto debería ser un servicio, consultar con la app de productos
   List<Adventure> adventures = [];
   late Adventure _currentAdventure;
 
-  Future<Adventure> newAdventure(Adventure createRequest) async {
+  AdventuresProvider() {
+    getAllAdventures();
+  }
+
+  Future createUpdateAdventure(Adventure adventure) async {
+    // isSaving = true;
+    // notifyListeners();
+    if (adventure.id == null) {
+      await newAdventure(adventure);
+    } else {
+      await updateAdventure(adventure);
+    }
+    // isSaving = false;
+    notifyListeners();
+  }
+
+  Future<int> newAdventure(Adventure createRequest) async {
     final newAdventure = Adventure(
         img: createRequest.img,
         title: createRequest.title,
         date: createRequest.date,
-        place: createRequest.date);
+        place: createRequest.place);
     final id = await DBProvider.db.newAdventure(createRequest);
     newAdventure.id = id;
     adventures.add(newAdventure);
     notifyListeners();
-    return newAdventure;
+    return id;
+  }
+
+  Future<int> updateAdventure(Adventure updateRequest) async {
+    await DBProvider.db.updateAdventure(updateRequest);
+    final index = adventures.indexWhere((x) => x.id == updateRequest.id);
+    adventures[index] = updateRequest;
+    notifyListeners();
+    return updateRequest.id!;
   }
 
   getAllAdventures() async {

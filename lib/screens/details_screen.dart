@@ -1,3 +1,5 @@
+import 'package:adventures_app/models/adventure.dart';
+import 'package:adventures_app/providers/adventures_form_provider.dart';
 import 'package:adventures_app/widgets/card_adventure_add.dart';
 import 'package:adventures_app/widgets/header_image.dart';
 import 'package:flutter/material.dart';
@@ -11,38 +13,56 @@ class DetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final Adventure adventure = ModalRoute.of(context)!.settings.arguments as Adventure;
     final adventuresProvider = Provider.of<AdventuresProvider>(context);
     final currentAdventure = adventuresProvider.currentAdventure;
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pushNamed(context, 'home'),
-                    child: const SizedBox(
-                      height: 30,
-                      width: 30,
-                      child: Icon(
-                        Icons.arrow_back_rounded,
-                        size: 30,
-                        color: Colors.grey,
+    final adding = currentAdventure.add ?? false;
+
+    final titleController = TextEditingController(
+      text: adding ? '' : currentAdventure.title,
+    );
+    final dateController = TextEditingController(
+      text: adding ? '' : currentAdventure.date,
+    );
+    final placeController = TextEditingController(
+      text: adding ? '' : currentAdventure.place,
+    );
+    return ChangeNotifierProvider(
+      create: (_) => AdventuresFormProvider(currentAdventure),
+      child: Scaffold(
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pushNamed(context, 'home'),
+                      child: const SizedBox(
+                        height: 30,
+                        width: 30,
+                        child: Icon(
+                          Icons.arrow_back_rounded,
+                          size: 30,
+                          color: Colors.grey,
+                        ),
                       ),
-                    ),
-                  )
-                ],
-              ),
-              const SizedBox(height: 10),
-              currentAdventure.add == true
-                  ? const AdventureCardAdd()
-                  : HeaderImage(adventure: currentAdventure),
-              const SizedBox(height: 20),
-              const MyForm(),
-            ],
+                    )
+                  ],
+                ),
+                const SizedBox(height: 10),
+                currentAdventure.add == true
+                    ? const AdventureCardAdd()
+                    : HeaderImage(adventure: currentAdventure),
+                const SizedBox(height: 20),
+                MyForm(
+                  titleController: titleController,
+                  dateController: dateController,
+                  placeController: placeController,
+                  adventuresProvider: adventuresProvider,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -50,44 +70,31 @@ class DetailsScreen extends StatelessWidget {
   }
 }
 
-class MyForm extends StatefulWidget {
-  const MyForm({super.key});
-  @override
-  State<MyForm> createState() => _MyFormState();
-}
+class MyForm extends StatelessWidget {
+  final TextEditingController titleController;
+  final TextEditingController dateController;
+  final TextEditingController placeController;
+  final AdventuresProvider adventuresProvider;
 
-class _MyFormState extends State<MyForm> {
-  final _adventureKey = GlobalKey<FormState>();
-  late TextEditingController dateController;
-  late TextEditingController titleController;
-  late TextEditingController placeController;
-  @override
-  void initState() {
-    super.initState();
-    final adventure = Provider.of<AdventuresProvider>(context, listen: false)
-        .currentAdventure;
-    final adding = adventure.add ?? false;
-
-    titleController = TextEditingController(
-      text: adding ? '' : adventure.title,
-    );
-    dateController = TextEditingController(
-      text: adding ? '' : adventure.date,
-    );
-    placeController = TextEditingController(
-      text: adding ? '' : adventure.place,
-    );
-  }
+  const MyForm(
+      {super.key,
+      required this.titleController,
+      required this.dateController,
+      required this.placeController,
+      required this.adventuresProvider});
 
   @override
   Widget build(BuildContext context) {
+    final adventuresForm = Provider.of<AdventuresFormProvider>(context);
+    final adventure = adventuresForm.adventure;
     return Form(
-      key: _adventureKey,
+      key: adventuresForm.formKey,
       child: Column(
         children: [
           CustomField(
+              adventure: adventure,
               controller: titleController,
-              isDate: false,
+              type: 'title',
               fieldLabel: 'Title',
               hintLabel: 'Type your event title',
               validator: (value) {
@@ -98,9 +105,10 @@ class _MyFormState extends State<MyForm> {
               }),
           const SizedBox(height: 10),
           CustomField(
+              adventure: adventure,
               controller: dateController,
-              isDate: true,
-              fieldLabel: 'Time',
+              type: 'date',
+              fieldLabel: 'Date',
               hintLabel: 'Select a date',
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -110,8 +118,9 @@ class _MyFormState extends State<MyForm> {
               }),
           const SizedBox(height: 10),
           CustomField(
+              adventure: adventure,
               controller: placeController,
-              isDate: false,
+              type: 'place',
               fieldLabel: 'Place',
               hintLabel: 'Type place of adventure',
               validator: (value) {
@@ -120,7 +129,15 @@ class _MyFormState extends State<MyForm> {
                 }
                 return null;
               }),
-          const SizedBox(height: 10),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              _SaveButton(
+                formProvider: adventuresForm,
+              )
+            ],
+          )
         ],
       ),
     );
@@ -128,12 +145,13 @@ class _MyFormState extends State<MyForm> {
 }
 
 class CustomField extends StatelessWidget {
-  final bool isDate;
+  final String type;
   final String fieldLabel;
   final String hintLabel;
   final String? initialValue;
   final String? Function(String?)? validator;
   final TextEditingController? controller;
+  final Adventure adventure;
 
   const CustomField(
       {super.key,
@@ -141,8 +159,9 @@ class CustomField extends StatelessWidget {
       required this.hintLabel,
       this.initialValue,
       this.validator,
-      required this.isDate,
-      this.controller});
+      this.controller,
+      required this.type,
+      required this.adventure});
 
   @override
   Widget build(BuildContext context) {
@@ -154,11 +173,11 @@ class CustomField extends StatelessWidget {
           const SizedBox(height: 5),
           TextFormField(
             controller: controller,
-            readOnly: isDate,
+            readOnly: type == 'date',
             decoration: _FieldStyle.newStyle(placeholderText: hintLabel),
             validator: validator,
             onTap: () async {
-              if (isDate) {
+              if (type == 'date') {
                 if (Platform.isIOS) {
                   print('IOS');
                 } else {
@@ -171,7 +190,7 @@ class CustomField extends StatelessWidget {
                     TimeOfDay? pickedHour = await showTimePicker(
                         initialEntryMode: TimePickerEntryMode.inputOnly,
                         orientation: Orientation.portrait,
-                        context: context,
+                        context: (context),
                         initialTime: TimeOfDay.now());
 
                     if (pickedHour != null) {
@@ -184,9 +203,17 @@ class CustomField extends StatelessWidget {
                       String chosenDateFormatted =
                           DateFormat("dd/MM/yyyy HH:mm").format(chosenDate);
                       controller?.text = chosenDateFormatted;
+                      adventure.date = chosenDate.toString();
                     }
                   }
                 }
+              }
+            },
+            onChanged: (value) {
+              if (type == 'title') {
+                adventure.title = value;
+              } else if (type == 'place') {
+                adventure.place = value;
               }
             },
           )
@@ -206,6 +233,30 @@ class _FieldStyle {
       border: const OutlineInputBorder(
         borderRadius: BorderRadius.all(Radius.circular(10)),
       ),
+    );
+  }
+}
+
+class _SaveButton extends StatelessWidget {
+  final AdventuresFormProvider formProvider;
+
+  const _SaveButton({required this.formProvider});
+
+  @override
+  Widget build(BuildContext context) {
+    final adventuresProvider = Provider.of<AdventuresProvider>(context);
+    return ElevatedButton.icon(
+      label: const Text('Save'),
+      icon: const Icon(Icons.save),
+      style: ButtonStyle(
+          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+          padding: WidgetStateProperty.all<EdgeInsetsGeometry>(
+              const EdgeInsets.symmetric(horizontal: 24))),
+      onPressed: () async {
+        if (!formProvider.isValidForm()) return;
+        await adventuresProvider.createUpdateAdventure(adventuresProvider.currentAdventure);
+      },
     );
   }
 }

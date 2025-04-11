@@ -57,7 +57,7 @@ class DBProvider {
 
   Future<List<Adventure>> getAllAdventures() async {
     final db = await database;
-    final response = await db.query('Adventures');
+    final response = await db.query('Adventures', orderBy: 'date ASC');
     return response.isNotEmpty
         ? response.map((adv) => Adventure.fromMap(adv)).toList()
         : [];
